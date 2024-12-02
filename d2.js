@@ -1,43 +1,50 @@
-// Part 1:
-let lines = $0.innerText.replace(/\n$/, '').replaceAll('Game ','').split('\n');
-let cleanLines = [];
-lines.forEach(line => {
-    [id, sets] = line.split(': ');
-    sets = sets.split('; ');
-    let colors = {
-        red: 0,
-        blue: 0,
-        green: 0
-    };
-    sets.forEach(cset => {
-        let found = Array.from(cset.matchAll(/((?<red>\d+)(?=\sred))|((?<blue>\d+)(?=\sblue))|((?<green>\d+)(?=\sgreen))/g), (m) => m.groups);
-        for ( let match of found ) {
-            if ( parseInt(match.red) > colors.red ) {
-                colors.red = parseInt(match.red);
+function checkLevel(inArray, ignoreFirst = false) {
+  let increasing = false;
+  let safe = true;
+  inArray.forEach((el, index) => {
+    if ( index === 0 ) {
+      if ( el <= inArray[inArray.length - 1] ) {
+        increasing = true;
+      }
+    } else {
+      if ( increasing ) {
+        if ( el < inArray[index-1] || el - inArray[index-1] > 3 || el === inArray[index-1] ) {
+          if ( ignoreFirst ) {
+            let testArray = inArray.toSpliced(index - 1, 1);
+            safe = checkLevel(testArray);
+            if (!safe) {
+              testArray = inArray.toSpliced(index, 1);
+              safe = checkLevel(testArray);
             }
-            if ( parseInt(match.blue) > colors.blue ) {
-                colors.blue = parseInt(match.blue);
-            }
-            if ( parseInt(match.green) > colors.green ) {
-                colors.green = parseInt(match.green);
-            }
+          } else {
+            safe = false;
+          }
         }
-    });
-    cleanLines.push([id, colors]);
-});
-let possibleMax = { red: 12, green: 13, blue: 14 };
-let possibleLines = cleanLines.filter(line => {
-    return line[1].red <= possibleMax.red && line[1].green <= possibleMax.green && line[1].blue <= possibleMax.blue;
-});
-let sum = 0;
-possibleLines.forEach(line => {
-    sum += parseInt(line[0]);
-});
-console.log(sum);
+      } else {
+        if ( el > inArray[index-1] || inArray[index-1] - el > 3 || el === inArray[index-1] ) {
+          if ( ignoreFirst ) {
+            let testArray = inArray.toSpliced(index - 1, 1);
+            safe = checkLevel(testArray);
+            if (!safe) {
+              testArray = inArray.toSpliced(index, 1);
+              safe = checkLevel(testArray);
+            }
+          } else {
+            safe = false;
+          }
+        }
+      }
+    }
+  });
+  return safe;
+}
 
-// Part 2:
-let powers = [];
-cleanLines.forEach(([id,colors]) => {
-  powers.push(colors.red * colors.blue * colors.green);
-});
-console.log(powers.reduce((x,y) => x + y));
+// Part 1:
+let input = $0.innerHTML.split('\n').map(el => el.split(' ').map(iEl => parseInt(iEl)));
+input.pop();
+let result1 = input.filter(el => checkLevel(el));
+console.log(`Result: ${result1.length}`);
+
+// Part2:
+let result2 = input.filter(el => checkLevel(el, true));
+console.log(`Result: ${result2.length}`);
