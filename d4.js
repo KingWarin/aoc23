@@ -1,44 +1,41 @@
 // Part 1:
-let lines = $0.innerText.replace(/\n$/, '').replaceAll('Card ','').split('\n');
-let cards = lines.map(line => {
-    [id, numbers] = line.split(': ');
-    [winning, lot] = numbers.split(' | ');
-    winning = winning.trim().replaceAll(/\s+/g,' ').split(' ');
-    lot = lot.trim().replaceAll(/\s+/g,' ').split(' ');
-    winning = winning.map(x => parseInt(x));
-    lot = lot.map(x => parseInt(x));
-    let points = 0;
-    let hits = 0;
-    lot.forEach(test => {
-        if ( winning.includes(test) ) {
-            if ( points != 0 ) {
-                points = points * 2;
-            } else {
-                points = 1;
-            }
-          hits++;
-        }
-    });
-    return { id: parseInt(id), winning, lot, points, hits, cardAmount: 1 };
-});
-let total1 = 0;
-cards.forEach(card => {
-    total1 += card.points;
-});
-console.log(total1);
-
-// Part 2:
-cards.forEach(card => {
-  if ( card.hits != 0 ) {
-    for(let j = 1; j <= card.cardAmount; j++ ) {
-      for(let i = 1; i <= card.hits; i++) {
-        cards[cards.findIndex(x => x.id == card.id + i)].cardAmount++;
+let input = $0.innerText.substr(0,$0.innerText.length - 1).split('\n').map(row=>row.split(''));
+let rowLength = input[0].length;
+let horizontal = input.map(row => row.join(''));
+let vertical = [];
+let diagonal = [];
+for(let i = 0; i < rowLength; i++) {
+  vertical.push(input.map(row => row[i]).join(''));
+}
+function getDiagonals(data) {
+  let tempDiagonal = [];
+  // Get diagonal for each row start
+  for(let i = 0; i < rowLength; i++) {
+    let diag = '';
+    for(let j = 0; j < data.length; j++) {
+      let off = i+j;
+      if ( off < data.length ) {
+        diag += data[i+j][j];
       }
     }
+    tempDiagonal.push(diag);
   }
-});
-let totalCards = 0;
-cards.forEach(card => {
-  totalCards += card.cardAmount;
-});
-console.log(totalCards);
+  //Get remaining diagonals from first row
+  for(let i = 1; i < data.length; i++) {
+    let diag = '';
+    for(let j = 0; j < data.length; j++) {
+      if ( j+i < rowLength ) {
+        diag += data[j][j+i];
+      }
+    }
+    tempDiagonal.push(diag);
+  }
+  return tempDiagonal;
+}
+diagonal = diagonal.concat(getDiagonals(input));
+input = input.map(row => row.reverse());
+diagonal = diagonal.concat(getDiagonals(input));
+let total1 = 0;
+total1 += [...horizontal, ...vertical, ...diagonal].map(el => el.match(/(XMAS)/g)?.length ?? 0).reduce((a,b) => a+b);
+total1 += [...horizontal, ...vertical, ...diagonal].map(el => el.match(/(SAMX)/g)?.length ?? 0).reduce((a,b) => a+b);
+console.log(`Result: ${total1}`);
